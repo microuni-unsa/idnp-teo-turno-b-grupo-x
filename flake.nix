@@ -25,27 +25,39 @@
           inherit system;
           config.allowUnfree = true;
         };
-        shellPkgs = pkgs.lib.flatten [
-          (with pkgs; [
-          ])
-          (with unstable; [
-          ])
-        ];
-        ldPkgs = with pkgs; [
-          stdenv.cc.cc
-          zlib
-          glib
-          libxcb
-          libglvnd
+        fonts = with pkgs; [
+          carlito
         ];
       in
       {
         devShells.default = pkgs.mkShell {
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath ldPkgs;
+          LD_LIBRARY_PATH =
+            with pkgs;
+            lib.makeLibraryPath [
+              stdenv.cc.cc
+              zlib
+              glib
+              libxcb
+              libglvnd
+            ];
+
           packages = pkgs.lib.flatten [
-            shellPkgs
+            (with pkgs; [
+            ])
+            (with unstable; [
+              typst
+              typstyle
+            ])
+            fonts
           ];
-          shellHook = "";
+          shellHook = ''
+            unset SOURCE_DATE_EPOCH
+          '';
+          env = {
+            FONTCONFIG_FILE = pkgs.makeFontsConf {
+              fontDirectories = fonts;
+            };
+          };
           buildInputs = [ pkgs.bashInteractive ];
         };
       }
