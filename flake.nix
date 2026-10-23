@@ -5,13 +5,14 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    unsareport.url = "github:UNSAReport/UNSAReport2?ref=dev";
   };
-
   outputs =
     {
       nixpkgs,
       nixpkgs-unstable,
       flake-utils,
+      unsareport,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -26,6 +27,7 @@
           config.allowUnfree = true;
         };
         fonts = with pkgs; [
+          lato
           carlito
         ];
       in
@@ -40,7 +42,6 @@
               libxcb
               libglvnd
             ];
-
           packages = pkgs.lib.flatten [
             (with pkgs; [
             ])
@@ -49,6 +50,7 @@
               typstyle
             ])
             fonts
+            unsareport.packages.${system}.default
           ];
           shellHook = ''
             unset SOURCE_DATE_EPOCH

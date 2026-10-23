@@ -1,0 +1,5 @@
+origin = "@unsareport/standard-report"
+env_prefix = "STANDARD_REPORT"
+
+[values]
+  filename_format = "{course} - {activity_code} - {group} - Informe.pdf"

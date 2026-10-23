@@ -1,0 +1,10 @@
+[project]
+  typst_entry = "report.typ"
+  config_version = 1
+
+[scripts]
+
+[hooks]
+
+[dependencies]
+  "@unsareport/standard-report" = "*"
