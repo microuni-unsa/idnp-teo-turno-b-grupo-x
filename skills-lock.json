@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "epis-unsa-report-writer": {
+      "source": "alvaro9rqc/epis-unsa-report-writer",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "d32cb98cf4e37e862734b6babc157d348517d5fe4e9e99e594cb8302daa244f4"
+    },
     "frontend-slides": {
       "source": "zarazhangrui/frontend-slides",
       "sourceType": "github",
