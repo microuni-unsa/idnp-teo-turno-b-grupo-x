@@ -12,7 +12,7 @@ equipo; ningún otro miembro edita `a9/analisis_layouts/`.
 - Captura base: `captura_base.png` — Xiaomi físico 1080×2400, 440 dpi
   (tamaño **mediano** guía), **vertical**, anuncio `post_id=3` con 2 comentarios.
 - Árbol: `Column(fillMaxSize) { SearchBoxComponent + LazyColumn(weight 1f,
-  reverseLayout) + Row(fillMaxWidth, TextField + IconButton Send) }`;
+reverseLayout) + Row(fillMaxWidth, TextField + IconButton Send) }`;
   burbuja: `Box(fillMaxWidth, align CenterStart/End) > Surface > Column`.
 
 ## 2. Decisión técnica estudiada
@@ -32,13 +32,13 @@ en vez de alturas fijas en dp para lista y campo.
 
 ## 3. Comparativa con alternativa concreta
 
-| | Actual: `LazyColumn(weight 1f)` | Alternativa: `Column + verticalScroll` + alturas fijas |
-|---|---|---|
-| Scroll/listas largas | Virtualizada, barata | Compone todo: jank con N grande |
-| Alturas | Reparto automático, sin dp mágicos | Frágil: cada tamaño/orientación pide otro dp |
-| Rotación / teclado | El campo conserva altura, la lista cede | El campo fijo + `verticalScroll` compiten; riesgo de solape sin `imePadding` (importado en el archivo pero sin usar) |
-| Orden chat | `reverseLayout` nativo | Manual (`reversed()` + scroll al final a mano) |
-| Costo | Medición ponderada, predecible | Medición simple pero mantenimiento por configuración |
+|                      | Actual: `LazyColumn(weight 1f)`         | Alternativa: `Column + verticalScroll` + alturas fijas                                                               |
+| -------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Scroll/listas largas | Virtualizada, barata                    | Compone todo: jank con N grande                                                                                      |
+| Alturas              | Reparto automático, sin dp mágicos      | Frágil: cada tamaño/orientación pide otro dp                                                                         |
+| Rotación / teclado   | El campo conserva altura, la lista cede | El campo fijo + `verticalScroll` compiten; riesgo de solape sin `imePadding` (importado en el archivo pero sin usar) |
+| Orden chat           | `reverseLayout` nativo                  | Manual (`reversed()` + scroll al final a mano)                                                                       |
+| Costo                | Medición ponderada, predecible          | Medición simple pero mantenimiento por configuración                                                                 |
 
 Alternativas descartadas: `ConstraintLayout` con barrera (misma función que el
 `weight` con más XML mental); altura fija en dp (rompe en landscape/pequeño,

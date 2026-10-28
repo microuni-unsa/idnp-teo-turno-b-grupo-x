@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A9 — Chat Académico: Layouts y Adaptación — PostCommentScreen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* === THEME TOKENS (Blue Professional) === */
+      :root {
+        --bg: #fdfae7;
+        --primary: #1e2bfa;
+        --text: #111111;
+        --muted: #6b6b6b;
+        --light: #9a9a9a;
+        --accent-light: rgba(30, 43, 250, 0.08);
+        --border: rgba(30, 43, 250, 0.2);
+        --card: rgba(30, 43, 250, 0.04);
+        --good: #059669;
+        --display: "Space Grotesk", sans-serif;
+        --body: "Inter", sans-serif;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      /* === VIEWPORT BASE (mandatory) === */
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #0b0b0e;
+      }
+      .deck-viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        background: #0b0b0e;
+      }
+      .deck-stage {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        transform-origin: 0 0;
+        background: var(--bg);
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: var(--bg);
+      }
+      .slide.active,
+      .slide.visible {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 1;
+      }
+      img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+      @media print {
+        html,
+        body {
+          width: 1920px;
+          height: auto;
+          overflow: visible;
+          background: #fff;
+        }
+        .deck-viewport {
+          position: static;
+          overflow: visible;
+          background: #fff;
+        }
+        .deck-stage {
+          position: static;
+          width: auto;
+          height: auto;
+          transform: none !important;
+          background: none;
+        }
+        .slide {
+          position: relative;
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          width: 1920px;
+          height: 1080px;
+          break-after: page;
+          page-break-after: always;
+        }
+        .slide:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+      }
+      /* === BASE === */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: var(--body);
+        color: var(--muted);
+      }
+      .slide-inner {
+        width: 1920px;
+        height: 1080px;
+        padding: 54px 80px 90px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .slide-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .eyebrow {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary);
+      }
+      .tag {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 19px;
+        background: var(--accent-light);
+        color: var(--primary);
+        padding: 10px 26px;
+        border-radius: 100px;
+        white-space: nowrap;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 84px;
+        line-height: 1.03;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      h2 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 54px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        margin-bottom: 14px;
+      }
+      .sub {
+        font-size: 26px;
+        line-height: 1.5;
+      }
+      .accent-line {
+        width: 88px;
+        height: 6px;
+        background: var(--primary);
+        border-radius: 3px;
+        margin-bottom: 20px;
+      }
+      .card {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 18px;
+        padding: 24px 30px;
+      }
+      .card h3 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 29px;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .card p,
+      .card li {
+        font-size: 23px;
+        line-height: 1.5;
+      }
+      .card ul {
+        padding-left: 24px;
+      }
+      .kpi {
+        font-family: var(--display);
+        font-weight: 700;
+        color: var(--primary);
+      }
+      .verdict {
+        background: var(--primary);
+        color: #fdfae7;
+        border-radius: 16px;
+        padding: 20px 32px;
+        font-family: var(--display);
+        font-size: 26px;
+        font-weight: 600;
+      }
+      /* image frames hug the image: the box fits the picture, never the reverse */
+      .frame {
+        background: none;
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        min-width: 0;
+      }
+      .frame .imgwrap {
+        flex: 0 0 auto;
+        margin: auto;
+        min-height: 0;
+        min-width: 0;
+        max-width: 100%;
+        max-height: 100%;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      .frame .imgwrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .label {
+        font-family: var(--display);
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--primary);
+        margin-bottom: 10px;
+      }
+      pre.code {
+        font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+        font-size: 21px;
+        line-height: 1.6;
+        background: #101223;
+        color: #e8eaff;
+        border-radius: 14px;
+        padding: 24px 28px;
+      }
+      pre.code .a {
+        color: #7ef0b2;
+      }
+      pre.code .c {
+        color: #8b8fa3;
+      }
+      pre.code .f {
+        color: #ffd479;
+      }
+      .counter {
+        position: absolute;
+        left: 80px;
+        bottom: 32px;
+        font-family: var(--display);
+        font-size: 22px;
+        color: var(--muted);
+      }
+      .progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 6px;
+        background: var(--primary);
+      }
+      .cover-deco {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 620px;
+        height: 1080px;
+        background: var(--accent-light);
+        clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(26px);
+        transition:
+          opacity 0.6s var(--ease),
+          transform 0.6s var(--ease);
+      }
+      .slide.visible .reveal {
+        opacity: 1;
+        transform: none;
+      }
+      .slide.visible .reveal:nth-child(2) {
+        transition-delay: 0.12s;
+      }
+      .slide.visible .reveal:nth-child(3) {
+        transition-delay: 0.22s;
+      }
+      .slide.visible .reveal:nth-child(4) {
+        transition-delay: 0.3s;
+      }
+      .note {
+        font-size: 21px;
+        color: var(--muted);
+      }
+      .note b {
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck-viewport">
+      <main class="deck-stage" id="deckStage">
+        <!-- S1 PORTADA -->
+        <section class="slide active">
+          <div class="slide-inner">
+            <div class="cover-deco"></div>
+            <div class="slide-header reveal">
+              <span class="eyebrow">A9 · IDNP · AlertaUNI</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1.05fr 0.95fr;
+                gap: 44px;
+                align-items: stretch;
+                flex: 1;
+                min-height: 0;
+              "
+            >
+              <div style="display: flex; flex-direction: column; justify-content: center">
+                <div class="accent-line reveal"></div>
+                <h1 class="reveal">Layouts que<br />se adaptan</h1>
+                <p class="sub reveal" style="margin-top: 18px; max-width: 900px">
+                  <b style="color: var(--text)">LazyColumn con weight(1f) y reverseLayout</b
+                  ><br />Probado en tres tamaños en dos orientaciones. Seis capturas, dos
+                  decisiones, una mejora mínima.
+                </p>
+                <div
+                  class="reveal"
+                  style="display: flex; gap: 14px; margin-top: 24px; flex-wrap: wrap"
+                >
+                  <span class="tag">Xiaomi 1080×2400 · 440 dpi</span
+                  ><span class="tag">Seis escenarios sin fallos</span>
+                </div>
+              </div>
+              <div class="reveal" style="min-height: 0; display: flex">
+                <div class="frame" style="flex: 1; min-height: 0">
+                  <div class="imgwrap" style="width: 396px; height: 880px">
+                    <img
+                      src="assets/captura_base.png"
+                      alt="Pantalla de conversación del chat académico"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="counter">01 / 07</div>
+            <div class="progress" style="width: 14.2%"></div>
+          </div>
+        </section>
+
+        <!-- S2 PANTALLA -->
+        <section class="slide">
+          <div class="slide-inner">
+            <div class="slide-header reveal">
+              <span class="eyebrow">01 · Pantalla única congelada</span>
+            </div>
+            <h2 class="reveal">Una pantalla, tres piezas, cero medidas a mano</h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 520px 1fr;
+                gap: 30px;
+                flex: 1;
+                min-height: 0;
+              "
+            >
+              <div class="reveal" style="min-height: 0; display: flex">
+                <div class="frame" style="flex: 1">
+                  <div class="imgwrap" style="width: 342px; height: 760px">
+                    <img
+                      src="assets/captura_base.png"
+                      alt="Pantalla de conversación del chat académico"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style="display: flex; flex-direction: column; gap: 20px; justify-content: center"
+              >
+                <div class="card reveal">
+                  <h3>Árbol de la pantalla</h3>
+                  <pre class="code">Column(fillMaxSize)
+  SearchBoxComponent
+  <span class="a">LazyColumn(weight 1f, reverseLayout)</span>
+    Box &gt; Surface &gt; Column
+  Row(<span class="f">Mensaje y Enviar · maxLines 5</span>)</pre>
+                </div>
+                <div class="card reveal">
+                  <h3>Lo importante</h3>
+                  <p>
+                    El <span class="kpi">weight(1f)</span> estira la lista y deja
+                    <b style="color: var(--text)">~60 % de vacío arriba</b> cuando hay 2 mensajes:
+                    contenedor lleno, contenido abajo por el <i>reverseLayout</i>. Con N grande,
+                    <span class="kpi">LazyColumn</span> solo compone lo visible.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="counter">02 / 07</div>
+            <div class="progress" style="width: 28.5%"></div>
+          </div>
+        </section>
+
+        <!-- S3 DECISION LAYOUT -->
+        <section class="slide">
+          <div class="slide-inner">
+            <div class="slide-header reveal">
+              <span class="eyebrow">02 · Decisión de layout — veredicto: mantener</span>
+            </div>
+            <h2 class="reveal">Peso automático frente a dp fijos</h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 28px;
+                flex: 1;
+                min-height: 0;
+                margin-top: 6px;
+                align-content: center;
+                align-items: start;
+              "
+            >
+              <div
+                class="card reveal"
+                style="
+                  border-width: 2px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                "
+              >
+                <h3>
+                  <span style="color: var(--good)">Actual:</span> LazyColumn con weight y
+                  reverseLayout
+                </h3>
+                <ul>
+                  <li>Reparte el alto sobrante, sin constantes por pantalla</li>
+                  <li>Virtualiza el hilo: barata con lista larga</li>
+                  <li>Orden de chat nativo, campo siempre visible</li>
+                </ul>
+              </div>
+              <div
+                class="card reveal"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  opacity: 0.92;
+                "
+              >
+                <h3>
+                  <span style="color: #9a9a9a">Descartada:</span> Column con scroll y alturas fijas
+                </h3>
+                <ul>
+                  <li>Cada tamaño y giro pide otro dp</li>
+                  <li>Compone todo el hilo: costo con N grande</li>
+                  <li>Orden y scroll del chat, a mano</li>
+                </ul>
+              </div>
+            </div>
+            <div class="verdict reveal" style="margin-top: 22px">
+              Se mantiene la estructura. También se descarta ConstraintLayout con barrera: igual que
+              el weight, con más complejidad.
+            </div>
+            <div class="counter">03 / 07</div>
+            <div class="progress" style="width: 42.8%"></div>
+          </div>
+        </section>
+
+        <!-- S4 MOSAICO 6 -->
+        <section class="slide">
+          <div class="slide-inner">
+            <div class="slide-header reveal">
+              <span class="eyebrow">03 · Evidencia en seis escenarios</span>
+            </div>
+            <h2 class="reveal">Seis escenarios, un solo comportamiento</h2>
+            <div
+              class="reveal"
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                flex: 1;
+                min-height: 0;
+                margin-top: 4px;
+                align-content: center;
+              "
+            >
+              <div class="frame">
+                <div class="imgwrap" style="width: 208px; height: 370px">
+                  <img
+                    src="assets/p1_small_portrait.png"
+                    alt="Pantalla en teléfono pequeño en vertical"
+                  />
+                </div>
+              </div>
+              <div class="frame">
+                <div class="imgwrap" style="width: 166.5px; height: 370px">
+                  <img
+                    src="assets/p3_medium_portrait.png"
+                    alt="Pantalla en teléfono mediano en vertical"
+                  />
+                </div>
+              </div>
+              <div class="frame">
+                <div class="imgwrap" style="width: 171px; height: 370px">
+                  <img
+                    src="assets/p5_large_portrait.png"
+                    alt="Pantalla en teléfono grande en vertical"
+                  />
+                </div>
+              </div>
+              <div class="frame">
+                <div class="imgwrap" style="width: 573px; height: 322px">
+                  <img
+                    src="assets/p2_small_landscape.png"
+                    alt="Pantalla en teléfono pequeño en horizontal"
+                  />
+                </div>
+              </div>
+              <div class="frame">
+                <div class="imgwrap" style="width: 573px; height: 258px">
+                  <img
+                    src="assets/p4_medium_landscape.png"
+                    alt="Pantalla en teléfono mediano en horizontal"
+                  />
+                </div>
+              </div>
+              <div class="frame">
+                <div class="imgwrap" style="width: 573px; height: 264px">
+                  <img
+                    src="assets/p6_large_landscape.png"
+                    alt="Pantalla en teléfono grande en horizontal"
+                  />
+                </div>
+              </div>
+            </div>
+            <p class="note reveal" style="margin-top: 10px">
+              Arriba en vertical, abajo en horizontal. De izquierda a derecha: teléfono pequeño,
+              mediano y grande. En horizontal solo se reduce el alto visible; textos, burbujas y
+              controles siguen intactos.
+            </p>
+            <div class="counter">04 / 07</div>
+            <div class="progress" style="width: 57.1%"></div>
+          </div>
+        </section>
+
+        <!-- S5 DECISION ADAPTACION -->
+        <section class="slide">
+          <div class="slide-inner">
+            <div class="slide-header reveal">
+              <span class="eyebrow">04 · Decisión de adaptación — por qué no se rompe</span>
+            </div>
+            <h2 class="reveal">El alto sobrante se reparte solo</h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 28px;
+                flex: 1;
+                min-height: 0;
+                margin-top: 6px;
+              "
+            >
+              <div class="reveal" style="min-height: 0; display: flex">
+                <div class="frame" style="flex: 1">
+                  <div class="imgwrap" style="width: 850px; height: 478px">
+                    <img
+                      src="assets/p2_small_landscape.png"
+                      alt="Pantalla en teléfono pequeño en horizontal"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                style="display: flex; flex-direction: column; gap: 20px; justify-content: center"
+              >
+                <div class="card reveal">
+                  <h3>Qué lo explica</h3>
+                  <p>
+                    <span class="kpi">weight(1f)</span> da a la lista todo menos cabecera y campo.
+                    Pequeño vs. grande solo cambia
+                    <b style="color: var(--text)">densidad y aire</b>, no la estructura.
+                  </p>
+                </div>
+                <div class="card reveal">
+                  <h3>Descartado</h3>
+                  <p>
+                    dp fijos por configuración, ramas con BoxWithConstraints y 2 paneles con
+                    WindowSizeClass: sobran para un hilo lineal.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="counter">05 / 07</div>
+            <div class="progress" style="width: 71.4%"></div>
+          </div>
+        </section>
+
+        <!-- S6 ANTES DESPUES -->
+        <section class="slide">
+          <div class="slide-inner">
+            <div class="slide-header reveal">
+              <span class="eyebrow">05 · Mejora mínima, antes y después</span>
+            </div>
+            <h2 class="reveal">El borde: teclado y vacío</h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 0.95fr 1.05fr;
+                gap: 28px;
+                flex: 1;
+                min-height: 0;
+                margin-top: 6px;
+              "
+            >
+              <div
+                style="display: flex; flex-direction: column; gap: 18px; justify-content: center"
+              >
+                <pre
+                  class="code reveal"
+                ><span class="c">// ANTES — import imePadding sin usar</span>
+Row(Modifier.fillMaxWidth()
+  .padding(vertical = 8.dp))
+
+<span class="c">// DESPUÉS</span>
+Row(Modifier.fillMaxWidth()
+  .padding(vertical = 8.dp)
+  .<span class="a">imePadding()</span>) <span class="c">// teclado no tapa Enviar</span>
+LazyColumn(... <span class="a">contentPadding = 8.dp</span>)</pre>
+                <div class="verdict reveal">
+                  Funcionalidad intacta en las 6 pruebas: burbujas, envío y desplazamiento en ambas
+                  direcciones.
+                </div>
+              </div>
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; min-height: 0"
+                class="reveal"
+              >
+                <div
+                  style="min-height: 0; display: flex; flex-direction: column; justify-content: center"
+                >
+                  <div class="label">Antes</div>
+                  <div class="frame" style="flex: 0 0 auto; min-height: 0">
+                    <div class="imgwrap" style="width: 261px; height: 580px">
+                      <img src="assets/captura_base_1.jpg" alt="Pantalla antes de la mejora" />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="min-height: 0; display: flex; flex-direction: column; justify-content: center"
+                >
+                  <div class="label">Después</div>
+                  <div class="frame" style="flex: 0 0 auto; min-height: 0">
+                    <div class="imgwrap" style="width: 261px; height: 580px">
+                      <img src="assets/captura_base_2.jpg" alt="Pantalla después de la mejora" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="counter">06 / 07</div>
+            <div class="progress" style="width: 85.7%"></div>
+          </div>
+        </section>
+
+        <!-- S7 CONCLUSIONES -->
+        <section class="slide">
+          <div class="slide-inner" style="justify-content: center">
+            <div class="slide-header reveal">
+              <span class="eyebrow">06 · Conclusiones</span>
+            </div>
+            <h2 class="reveal">Medir menos, repartir más</h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+                margin-top: 10px;
+              "
+            >
+              <div class="card reveal">
+                <div class="kpi" style="font-size: 60px">01</div>
+                <h3>Peso antes que dp</h3>
+                <p>weight(1f) absorbe cabecera, lista y teclado sin constantes por pantalla.</p>
+              </div>
+              <div class="card reveal">
+                <div class="kpi" style="font-size: 60px">02</div>
+                <h3>Virtualizar el hilo</h3>
+                <p>LazyColumn con reverseLayout: chat barato con lista larga y orden nativo.</p>
+              </div>
+              <div class="card reveal">
+                <div class="kpi" style="font-size: 60px">03</div>
+                <h3>Atacar el borde</h3>
+                <p>
+                  El fallo real era el teclado: imePadding y contentPadding lo cierran en dos
+                  líneas.
+                </p>
+              </div>
+            </div>
+            <div class="verdict reveal" style="margin-top: 26px; text-align: center">
+              PostCommentScreen se mantiene con una mejora mínima, verificada en seis escenarios.
+            </div>
+            <div class="counter">07 / 07</div>
+            <div class="progress" style="width: 100%"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script>
+      let cur = 0;
+      const slides = [...document.querySelectorAll(".slide")];
+      function show(i) {
+        cur = Math.max(0, Math.min(i, slides.length - 1));
+        slides.forEach((s, k) => {
+          s.classList.toggle("active", k === cur);
+          s.classList.toggle("visible", k === cur);
+        });
+        document
+          .querySelectorAll(".progress")
+          .forEach((p) => (p.style.width = ((cur + 1) / slides.length) * 100 + "%"));
+      }
+      function go(d) {
+        show(cur + d);
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault();
+          go(1);
+        }
+        if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          go(-1);
+        }
+        if (e.key === "Home") show(0);
+        if (e.key === "End") show(slides.length - 1);
+      });
+      let tx = null;
+      document.addEventListener("touchstart", (e) => (tx = e.touches[0].clientX), {
+        passive: true,
+      });
+      document.addEventListener(
+        "touchend",
+        (e) => {
+          if (tx == null) return;
+          const dx = e.changedTouches[0].clientX - tx;
+          if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+          tx = null;
+        },
+        { passive: true },
+      );
+      (function () {
+        const st = document.getElementById("deckStage");
+        const rs = () => {
+          const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+          st.style.transform =
+            "translate(" +
+            (innerWidth - 1920 * k) / 2 +
+            "px," +
+            (innerHeight - 1080 * k) / 2 +
+            "px) scale(" +
+            k +
+            ")";
+        };
+        addEventListener("resize", rs);
+        rs();
+        show(0);
+      })();
+    </script>
+  </body>
+</html>

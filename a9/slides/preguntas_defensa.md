@@ -1,0 +1,16 @@
+# Preguntas de defensa — A9 (5 respuestas preparadas)
+
+## 1. ¿Por qué falla en horizontal pero no en vertical? (¿por qué aquí NO falló?)
+En vertical sobra alto y el defecto se esconde; en horizontal el alto visible cae (~50 %) y cualquier altura fija o campo sin `imePadding` compite con el teclado y la lista. Aquí no falló porque `LazyColumn con weight(1f)` cede: la lista se encoge y el `Row` de Mensaje/Enviar conserva su altura intrínseca (`maxLines=5`). Evidencia: P2/P4/P6 (small/medium/large landscape) mantienen header, lista e input apilados sin solape; solo se ve menos hilo. El único riesgo real era el teclado tapando el input — el archivo ya importaba `imePadding` sin usarlo — y se cierra con la mejora mínima.
+
+## 2. ¿Qué decisión técnica explica la diferencia entre pequeño y grande?
+`Modifier.weight(1f)` dentro de `Column(fillMaxSize)` + `LazyColumn` virtualizada. El peso reparte el alto sobrante (total − cabecera − campo) en vez de medirlo a mano, así que pasar de 720×1280 (small) a 1440×3120 (large) solo cambia densidad y aire, no la estructura. `LazyColumn` además compone solo lo visible, por eso una burbuja larga (Luis) se envuelve igual en P1 y P5 sin truncar. Con dp fijos, cada tamaño pediría otra constante; con peso, cero ramas por tamaño.
+
+## 3. ¿Por qué tamaño fijo en lugar de adaptable? (¿por qué NO usamos fijo?)
+No lo usamos, y esa es la tesis: el tamaño fijo (`Column + verticalScroll` con dp fijas para lista y campo) es lo que la guía pide evitar. Es frágil: cada orientación/tamaño pide otro dp, compone todo el hilo aunque no se vea (jank con N grande), obliga a `reversed() + scroll manual` para imitar el chat y compite con el teclado sin `imePadding`. El adaptable (`weight + reverseLayout`) reparte automáticamente, virtualiza y conserva el orden nativo. Por eso el veredicto de la ficha es MANTENER lo adaptable y descartar lo fijo (y también `ConstraintLayout` con barrera, que iguala al weight con más complejidad).
+
+## 4. ¿Qué cambiarían si la app tuviera que funcionar en ventana de ancho reducido?
+La decisión actual ya sobrevive al ancho reducido (P1 small 720 px y P2 landscape lo prueban: burbujas envueltas, sin desbordes). Si el ancho se estrecha más (modo multiventana / foldable), mantendríamos el hilo lineal y solo: a) limitaríamos `maxWidth` de la burbuja (p. ej. 85 %) para que no ocupe todo el carril, b) activaríamos `WindowSizeClass` o `BoxWithConstraints` solo como interruptor a 2 paneles (lista + detalle) en `Medium/Expanded`, no para reescribir el chat, y c) conservaríamos `imePadding + navigationBarsPadding` en el input. Nada de dp fijos por ventana: el peso sigue repartiendo.
+
+## 5. ¿Por qué la alternativa elegida supera a la descartada?
+Elegida: `LazyColumn(weight 1f) + reverseLayout`. Descartada: `Column + verticalScroll + alturas fijas` (y variante `ConstraintLayout`-barrera). Gana en los 4 ejes de la ficha: scroll (virtualizada barata vs. componer todo), alturas (reparto automático vs. dp por configuración), rotación/teclado (la lista cede, el campo conserva altura vs. competencia y solape sin `imePadding`) y orden chat (nativo vs. manual). Medición ponderada cuesta un poco más que medición simple, pero se paga una vez; el dp fijo se paga en cada pantalla nueva. Las 6 capturas (P1–P6 todo OK) son la prueba empírica del veredicto.
